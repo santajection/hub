@@ -55,6 +55,7 @@ app.initSocketIO = function(io) {
 
   var mobile = io.of('/mobile').on('connection', function(socket) {
     game.join(socket.id);
+    socket.emit('shaken push', game.isActive());
     socket.on('proj', function (msg) {
       game.move(socket.id, 1);
     });
