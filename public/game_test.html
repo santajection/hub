@@ -21,6 +21,7 @@ var ul = d3.select('ul');
 socket.on('connect', function() {
   socket.on('mobile_move', function (msg) {
     ul.insert('li', 'li').text(
+      '' + d3.entries(msg.options).length +
       d3.entries(msg.options).map(function(d) {return d.key + ': ' + d.value;}).join(', ')
     );
   });
