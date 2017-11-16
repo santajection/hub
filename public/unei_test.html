@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src='https://d3js.org/d3.v4.min.js'></script>
+<link rel='stylesheet' href='/stylesheets/style.css' />
+<script src="/socket.io/socket.io.js"></script>
+
+<script type="text/javascript" src="https://cdn.rawgit.com/alexgibson/shake.js/master/shake.js"></script>
+<body>
+<ul>
+  <li><a id='init' href='#'>initialize</a></li>
+  <li><a id='start' href='#'>start</a></li>
+  <li><a id='stop' href='#'>finish</a></li>
+</ul>
+
+<script>
+var log = console.log;
+// Client
+var socket = io.connect('/unnei');
+
+socket.on('connect', function() {
+  socket.emit('msg send', 'data');
+  socket.on('msg push', function (msg) {
+    log(msg);
+  });
+});
+
+d3.select('#init').on('click', function() {
+  d3.event.preventDefault();
+  d3.event.stopPropagation();
+  socket.emit('game initialize', 'INIT');
+});
+
+d3.select('#start').on('click', function() {
+  d3.event.preventDefault();
+  d3.event.stopPropagation();
+  socket.emit('game start', 'start');
+});
+
+d3.select('#stop').on('click', function() {
+  d3.event.preventDefault();
+  d3.event.stopPropagation();
+  socket.emit('game stop', 'stop');
+});
+
+
+
+</script>
