@@ -1,0 +1,8 @@
+app:
+    build: .
+    ports:
+        - 3000
+    environment:
+        VIRTUAL_HOST: santaapp.osoken.jp
+        LETSENCRYPT_HOST: santaapp.osoken.jp
+        LETSENCRYPT_EMAIL: osoken.devel@outlook.jp

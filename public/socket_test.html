@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src='https://d3js.org/d3.v4.min.js'></script>
+<link rel='stylesheet' href='/stylesheets/style.css' />
+<script src="/socket.io/socket.io.js"></script>
+
+<script type="text/javascript" src="https://cdn.rawgit.com/alexgibson/shake.js/master/shake.js"></script>
+<body>
+
+<script>
+// Client
+var log = function(){ console.log(arguments); }
+// Client
+var socket = io.connect('/mobile');
+
+socket.on('connect', function() {
+  socket.emit('msg send', 'data');
+  socket.on('shaken push', function (msg) {
+    log(msg);
+  });
+});
+
+//listen to shake event
+var shakeEvent = new Shake({threshold: 15});
+shakeEvent.start();
+window.addEventListener('shake', function(){
+  d3.select('body').insert('div', 'div').text('shaken');
+  socket.emit('shaken', 1);
+}, false);
+
+d3.select('body').on('click', function() {
+  d3.select('body').insert('div', 'div').text('shaken');
+  socket.emit('proj', 1);
+
+});
+//stop listening
+function stopShake(){
+  d3.select('body').insert('div', 'div').text('stop');
+    shakeEvent.stop();
+}
+
+//check if shake is supported or not.
+if(!("ondevicemotion" in window)){alert("Not Supported");}
+
+var playing = function() {
+  console.log('SHAKING');
+  socket.emit('proj', 1);
+  setTimeout(playing, Math.random() * 500);
+};
+
+playing();
+
+</script>

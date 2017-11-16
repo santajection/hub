@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src='https://d3js.org/d3.v4.min.js'></script>
+<link rel='stylesheet' href='/stylesheets/style.css' />
+<script src="/socket.io/socket.io.js"></script>
+
+<script type="text/javascript" src="https://cdn.rawgit.com/alexgibson/shake.js/master/shake.js"></script>
+<body>
+
+  <ul>
+  </ul>
+
+<script>
+// Client
+var log = function(){ console.log(arguments); }
+// Client
+var socket = io.connect('/proj');
+
+var ul = d3.select('ul');
+
+socket.on('connect', function() {
+  socket.on('mobile_move', function (msg) {
+    ul.insert('li', 'li').text(
+      d3.entries(msg.options).map(function(d) {return d.key + ': ' + d.value;}).join(', ')
+    );
+  });
+});
+
+</script>

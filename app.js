@@ -6,9 +6,10 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 var index = require('./routes/index');
-var users = require('./routes/users');
 
 var app = express();
+
+var game = require('./game');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -23,7 +24,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
-app.use('/users', users);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -31,6 +31,7 @@ app.use(function(req, res, next) {
   err.status = 404;
   next(err);
 });
+
 
 // error handler
 app.use(function(err, req, res, next) {
@@ -42,5 +43,48 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+app.initSocketIO = function(io) {
+  io.sockets.on('connection', function (socket) {
+    console.log('connected');
+    socket.on('msg send', function (msg) {
+      socket.emit('msg push', msg);
+      socket.broadcast.emit('msg push', msg);
+    });
+  });
+
+  var mobile = io.of('/mobile').on('connection', function(socket) {
+    game.join(socket.id);
+    socket.on('proj', function (msg) {
+      game.move(socket.id, 1);
+    });
+  });
+
+  var proj = io.of('/proj').on('connection', function(socket) {
+    game.connect(socket);
+  });
+
+  var unnei = io
+    .of('/unnei')
+    .on('connection', function(socket) {
+      console.log('news connected');
+      socket.on('msg send', function (msg) {
+        unnei.emit('msg push', msg + ' from news');
+      });
+      socket.on('game initialize', function (msg) {
+        game.initialize();
+        unnei.emit('msg push', msg + ' from news');
+      });
+      socket.on('game start', function (msg) {
+        game.start();
+        unnei.emit('msg push', msg + ' from news');
+      });
+      socket.on('game stop', function (msg) {
+        game.end();
+        unnei.emit('msg push', msg + ' from news');
+      });
+    });
+};
+game.initialize();
 
 module.exports = app;
