@@ -19,6 +19,7 @@ santa jection Hub Web socket API
 - `socket.on('initialize', {method: 'initialize', options: {}, timestamp: 12312312323})`: 参加受付状態遷移指示
 - `socket.on('start', {method: 'start', options: {}, timestamp: 12332342412321})`: ゲーム開始指示
 - `socket.on('notify', {method: 'notify', options: {...}, timestamp: 1231231231})`: 運営からのメッセージを受信
+- `socket.on('santa_move', {method: 'santa_move', options: {color: 'red', amount: 123}, timestamp: 1232141312})`: `color` 色のサンタを `amount` だけ進める指示
 - `socket.emit('initialized', null)`: 参加受付状態になった
 - `socket.emit('started', null)`: ゲームがスタートした
 - `socket.emit('ended', null)`: ゲームが終了した
@@ -29,7 +30,7 @@ santa jection Hub Web socket API
 
 - `socket.emit('initialize', null)`: 参加受付状態にしろ
 - `socket.emit('start', null)`: ゲームを開始しろ
-- `socket.emit('santa_move', {id: 'socketid', amount: 123})`: `id` のサンタを `amount` だけ進めろ
+- `socket.emit('santa_move', {color: 'red', amount: 123})`: `color` 色のサンタを `amount` だけ進めろ
 - `socket.emit('change_scene', {???})`: 画面を遷移しろ
 - `socket.emit('notify_proj', {message: 'some message'})`: プロジェクタへメッセージ送信
 - `socket.emit('notify_mobile', {id: `socketid`, message: 'some message'})`: モバイルへメッセージ送信
