@@ -54,23 +54,20 @@ app.initSocketIO = function(io) {
   });
 
   var mobile = io.of('/mobile').on('connection', function(socket) {
-    game.join(socket.id);
-    socket.emit('shaken push', game.isActive());
-    socket.on('proj', function (msg) {
-      game.move(socket.id, 1);
-    });
+    game.setMobileSocket(socket.id, socket);
   });
 
   var proj = io.of('/proj').on('connection', function(socket) {
-    game.connect(socket);
+    game.setProjSocket(socket);
   });
 
   var unnei = io
     .of('/unnei')
     .on('connection', function(socket) {
-      console.log('news connected');
+      game.setUnneiSocket(socket);
+      socket.on('')
       socket.on('msg send', function (msg) {
-        unnei.emit('msg push', msg + ' from news');
+        unnei.emit('msg push', msg);
       });
       socket.on('game initialize', function (msg) {
         game.initialize();
