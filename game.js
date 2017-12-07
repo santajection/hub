@@ -26,7 +26,7 @@ game.setUnneiSocket = function(socket) {
     sendToProj('start', {});
   });
   socket.on('santa_move', function(msg) {
-    game.move(msg.id, msg.amount);
+    sendToProj('santa_move', msg);
   });
   socket.on('change_scene', function(msg) {
     sendToProj('change_scene', msg);
