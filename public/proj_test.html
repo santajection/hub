@@ -33,6 +33,10 @@ socket.on('connect', function() {
   socket.emit('initialized', null);
   log(d3.entries(msg).map(function(d) {return d.key + ': ' + d.value;}).join(', '));
   console.log(this);
+}).on('start', function(msg) {
+  socket.emit('start', null);
+  log(d3.entries(msg).map(function(d) {return d.key + ': ' + d.value;}).join(', '));
+  console.log(this);
 });
 
 

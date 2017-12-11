@@ -27,10 +27,10 @@ var isSocketReady = function() {
 game.setUnneiSocket = function(socket) {
   unneiSocket = socket;
   socket.on('initialize', function(msg) {
-    sendToProj('initialize', {});
+    sendToProj('initialize', msg);
   });
   socket.on('start', function(msg) {
-    sendToProj('start', {});
+    sendToProj('start', msg);
   });
   socket.on('santa_move', function(msg) {
     sendToProj('santa_move', msg);
@@ -101,7 +101,7 @@ var sendToProj = function(method, obj) {
   }
 };
 
-var sendToSanta = function(id, method, obj) {
+var sendToSanta = function(method, obj) {
   if (mobileSockets[id] !== void 0) {
     mobileSockets[id].emit(
       method, {
@@ -111,15 +111,39 @@ var sendToSanta = function(id, method, obj) {
       }
     );
   }
-}
+};
+
+var sendToSantaById = function(id, method, obj) {
+  if (mobileSockets[id] !== void 0) {
+    mobileSockets[id].emit(
+      method, {
+        method: method,
+        options: obj,
+        timestamp: new Date().getTime()
+      }
+    );
+  }
+};
+
+var sendToSantaByStatus = function(status, method, obj) {
+  Object.keys(mobileSockets).forEach(function(id) {
+    if (mobileSockets[id].status === status) {
+      sendToSantaById(id, method, obj);
+    }
+  });
+};
 
 var sendToUnnei = function(method, obj) {
   if (unneiSocket !== null) {
-    unneiSocket.emit(method, {
-      method: method,
-      options: obj,
-      timestamp: new Date().getTime()
-    });
+    if (obj.method !== void 0 && obj.options !== void 0 && obj.timestamp !== void 0) {
+      unneiSocket.emit(method, obj);
+    } else {
+      unneiSocket.emit(method, {
+        method: method,
+        options: obj,
+        timestamp: new Date().getTime()
+      });
+    }
   }
 }
 
