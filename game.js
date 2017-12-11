@@ -13,12 +13,127 @@ var state = gameState.stopped;
 
 var connection = null;
 
-game.join = function(uid) {
-  if (state !== gameState.initialized) {
-    return;
+var unneiSocket = null;
+var projSocket = null;
+var mobileSockets = {};
+
+game.setUnneiSocket = function(socket) {
+  unneiSocket = socket;
+  socket.on('initialize', function(msg) {
+    sendToProj('initialize', {});
+  });
+  socket.on('start', function(msg) {
+    sendToProj('start', {});
+  });
+  socket.on('santa_move', function(msg) {
+    sendToProj('santa_move', msg);
+  });
+  socket.on('change_scene', function(msg) {
+    sendToProj('change_scene', msg);
+  });
+  socket.on('notify_proj', function(msg) {
+    sendToProj('notify', msg);
+  });
+  socket.on('notify_mobile', function(msg) {
+    sendToSanta(msg.id, 'notify', msg);
+  });
+  return game;
+};
+
+game.setProjSocket = function(socket) {
+  projSocket = socket;
+  socket.on('initialized', function(msg) {
+    game.initialize();
+  });
+  socket.on('started', function(msg) {
+    game.start();
+  });
+  socket.on('finished', function(msg) {
+    game.end();
+  });
+  socket.on('goaled', function(msg) {
+    game.goaled(msg.id);
+  });
+  socket.on('hit_tonakai', function(msg) {
+    game.hit_tonakai(msg.id);
+  });
+  return game;
+};
+
+game.setMobileSocket = function(id, socket) {
+  mobileSockets[id] = socket;
+
+  socket.on('move', function (msg) {
+    game.move(socket.id, 1);
+  });
+  socket.on('join', function (msg) {
+    if (game.join(socket.id, msg)) {
+      socket.emit('notify', {
+        message: '参加が受け付けられました'
+      });
+    } else {
+      socket.emit('notify', {
+        message: '参加が受け付けられませんでした'
+      });
+    }
+  });
+  socket.on('glow', function (msg) {
+    game.glow(socket.id);
+  });
+
+  return game;
+};
+
+var sendToProj = function(method, obj) {
+  projSocket.emit(method, {
+    method: method,
+    options: obj,
+    timestamp: new Date().getTime()
+  });
+};
+
+var sendToSanta = function(id, method, obj) {
+  if (mobileSockets[id] !== void 0) {
+    mobileSockets[id].emit(
+      method, {
+        method: method,
+        options: obj,
+        timestamp: new Date().getTime()
+      }
+    );
   }
-  activeSanta[uid] = 0;
-  return uid;
+}
+
+var sendToUnnei = function(method, obj) {
+  unneiSocket.emit(method, {
+    method: method,
+    options: obj,
+    timestamp: new Date().getTime()
+  });
+}
+
+game.join = function(uid, info) {
+  if (state !== gameState.initialized) {
+    return false;
+  }
+  try {
+    if (activeSanta[uid] !== void 0) {
+      return false;
+    }
+    var obj = {
+      id: uid, cnt: 0, name: info.name, color: info.color,
+      status: 'playing'
+    };
+    activeSanta[uid] = obj;
+    sendToProj('join', obj)
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+game.glow = function(id) {
+  sendToProj('glow', {id: id});
 };
 
 game.isActive = function(uid) {
@@ -29,7 +144,7 @@ game.move = function(uid, amount) {
   if (state !== gameState.started || activeSanta[uid] === void 0) {
     return;
   }
-  activeSanta[uid] += (amount === void 0)?1:amount;
+  activeSanta[uid].cnt += (amount === void 0)?1:amount;
 };
 
 game.start = function() {
@@ -52,13 +167,28 @@ game.end = function() {
 game.emit = function() {
   var res = {};
   Object.keys(activeSanta).forEach(function(k) {
-    if (activeSanta[k] !== 0) {
-      res[k] = activeSanta[k];
+    if (activeSanta[k].cnt !== 0 && activeSanta[k].status === 'playing') {
+      res[k] = activeSanta[k].cnt;
       activeSanta[k] = 0;
     }
   });
   return res;
 };
+
+game.goaled = function(uid) {
+  if (state !== gameState.started || activeSanta[uid] === void 0) {
+    return;
+  }
+  activeSanta[uid].state = 'goaled';
+  sendToSanta(uid, 'notify', {message: 'ゴールしました！おめでとうございます！！'});
+};
+
+game.hit_tonakai = function(uid) {
+  if (state !== gameState.started || activeSanta[uid] === void 0) {
+    return;
+  }
+  sendToSanta(uid, 'notify', {message: 'トナカイにぶつかってしまいました'});
+}
 
 game.connect = function(io) {
   connection = io;

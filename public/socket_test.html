@@ -7,11 +7,19 @@
 <script type="text/javascript" src="https://cdn.rawgit.com/alexgibson/shake.js/master/shake.js"></script>
 <body>
 
+<ul>
+</ul>
+
 <script>
+
+var ul = d3.select('ul');
 // Client
-var log = function(){ console.log(arguments); }
+var log = function(msg) {
+  ul.insert('li', msg);
+}
 // Client
 var socket = io.connect('/mobile');
+
 
 socket.on('connect', function() {
   socket.emit('msg send', 'data');
@@ -25,7 +33,7 @@ var shakeEvent = new Shake({threshold: 15});
 shakeEvent.start();
 window.addEventListener('shake', function(){
   d3.select('body').insert('div', 'div').text('shaken');
-  socket.emit('shaken', 1);
+  socket.emit('proj', 1);
 }, false);
 
 d3.select('body').on('click', function() {
@@ -43,7 +51,6 @@ function stopShake(){
 if(!("ondevicemotion" in window)){alert("Not Supported");}
 
 var playing = function() {
-  console.log('SHAKING');
   socket.emit('proj', 1);
   setTimeout(playing, Math.random() * 500);
 };
