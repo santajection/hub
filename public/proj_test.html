@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src='https://d3js.org/d3.v4.min.js'></script>
+<link rel='stylesheet' href='/stylesheets/style.css' />
+<script src="/socket.io/socket.io.js"></script>
+
+<script type="text/javascript" src="https://cdn.rawgit.com/alexgibson/shake.js/master/shake.js"></script>
+<body>
+<ul>
+  <li id='mobile_move'></li>
+  <li id='join'></li>
+  <li id='glow_santa'></li>
+  <li id='change_scene'></li>
+  <li id='initialize'></li>
+  <li id='start'></li>
+  <li id='notify'></li>
+  <li id='santa_move'></li>
+  <li><a id='initialized' href='#'>initialize</a></li>
+  <li><a id='started' href='#'>start</a></li>
+  <li><a id='ended' href='#'>start</a></li>
+  <li><input id='goaled'></input><a id='goaledsubmit' href='#'>submit</a></li>
+  <li><input id='hit_tonakai'></input><a id='hit_tonakaisubmit' href='#'>submit</a></li>
+</ul>
+
+<script>
+var log = console.log;
+// Client
+var socket = io.connect('/proj');
+
+socket.on('connect', function() {
+  console.log(socket);
+}).on('initialize', function(msg) {
+  socket.emit('initialized', null);
+  log(d3.entries(msg).map(function(d) {return d.key + ': ' + d.value;}).join(', '));
+  console.log(this);
+});
+
+
+d3.select('#initialized').on('click', function() {
+  d3.event.preventDefault();
+  d3.event.stopPropagation();
+  socket.emit('initialized', null);
+});
+
+d3.select('#started').on('click', function() {
+  d3.event.preventDefault();
+  d3.event.stopPropagation();
+  socket.emit('started', null);
+});
+
+d3.select('#ended').on('click', function() {
+  d3.event.preventDefault();
+  d3.event.stopPropagation();
+  socket.emit('ended', null);
+});
+
+d3.select('#goaledsubmit').on('click', function() {
+  d3.event.preventDefault();
+  d3.event.stopPropagation();
+  socket.emit('goaled', {id: d3.select('#goaled').property('value')});
+});
+
+</script>
