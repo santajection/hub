@@ -102,36 +102,50 @@ var sendToProj = function(method, obj) {
 };
 
 var sendToSanta = function(method, obj) {
-  if (mobileSockets[id] !== void 0) {
-    mobileSockets[id].emit(
-      method, {
-        method: method,
-        options: obj,
-        timestamp: new Date().getTime()
-      }
-    );
+  if (obj.id !== void 0) {
+    sendToSantaById(id, method, obj);
+  } else if (obj.status !== void 0) {
+    sendToSantaByStatus(obj.status, method, obj);
+  } else if (obj.broadcast !== void 0 && obj.broadcast) {
+    sendToSantaBroadcast(method, obj);
+  } else {
+    sendToSantaAll(method, obj);
   }
 };
 
 var sendToSantaById = function(id, method, obj) {
   if (mobileSockets[id] !== void 0) {
-    mobileSockets[id].emit(
-      method, {
+    if (obj.method !== void 0 && obj.options !== void 0 && obj.timestamp !== void 0) {
+      mobileSockets[id].emit(method, obj);
+    } else {
+      mobileSockets[id].emit(method, {
         method: method,
         options: obj,
         timestamp: new Date().getTime()
-      }
-    );
+      });
+    }
   }
 };
 
 var sendToSantaByStatus = function(status, method, obj) {
-  Object.keys(mobileSockets).forEach(function(id) {
-    if (mobileSockets[id].status === status) {
+  Object.keys(activeSanta).forEach(function(id) {
+    if (activeSanta[id].status === status) {
       sendToSantaById(id, method, obj);
     }
   });
 };
+
+var sendToSantaAll = function(method, obj) {
+  Object.keys(activeSanta).forEach(function(id) {
+    sendToSantaById(id, method, obj);
+  });
+};
+
+var sendToSantaBroadcast = function(method, obj) {
+  Object.keys(mobileSockets).forEach(function(id) {
+    sendToSantaById(id, method, obj);
+  });
+}
 
 var sendToUnnei = function(method, obj) {
   if (unneiSocket !== null) {
