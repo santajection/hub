@@ -10,6 +10,7 @@
   <li><a id='init' href='#'>initialize</a></li>
   <li><a id='start' href='#'>start</a></li>
   <li><a id='stop' href='#'>finish</a></li>
+  <li><input id='bamen'></input><a id='bamensubmit' href='#'>submit</a></li>
 </ul>
 
 <script>
@@ -18,30 +19,31 @@ var log = console.log;
 var socket = io.connect('/unnei');
 
 socket.on('connect', function() {
-  socket.emit('msg send', 'data');
-  socket.on('msg push', function (msg) {
-    log(msg);
-  });
+  console.log(socket);
 });
 
 d3.select('#init').on('click', function() {
   d3.event.preventDefault();
   d3.event.stopPropagation();
-  socket.emit('game initialize', 'INIT');
+  socket.emit('initialize', null);
 });
 
 d3.select('#start').on('click', function() {
   d3.event.preventDefault();
   d3.event.stopPropagation();
-  socket.emit('game start', 'start');
+  socket.emit('start', null);
 });
 
 d3.select('#stop').on('click', function() {
   d3.event.preventDefault();
   d3.event.stopPropagation();
-  socket.emit('game stop', 'stop');
+  socket.emit('stop', null);
 });
 
-
+d3.select('#bamensubmit').on('click', function() {
+  d3.event.preventDefault();
+  d3.event.stopPropagation();
+  socket.emit('change_scene', {text: d3.select('#bamen').property('value')});
+});
 
 </script>

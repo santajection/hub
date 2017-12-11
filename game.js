@@ -17,6 +17,13 @@ var unneiSocket = null;
 var projSocket = null;
 var mobileSockets = {};
 
+var isSocketReady = function() {
+  if (unneiSocket === null || projSocket === null) {
+    return false;
+  }
+  return true;
+};
+
 game.setUnneiSocket = function(socket) {
   unneiSocket = socket;
   socket.on('initialize', function(msg) {
@@ -85,11 +92,13 @@ game.setMobileSocket = function(id, socket) {
 };
 
 var sendToProj = function(method, obj) {
-  projSocket.emit(method, {
-    method: method,
-    options: obj,
-    timestamp: new Date().getTime()
-  });
+  if (projSocket !== null) {
+    projSocket.emit(method, {
+      method: method,
+      options: obj,
+      timestamp: new Date().getTime()
+    });
+  }
 };
 
 var sendToSanta = function(id, method, obj) {
@@ -105,11 +114,13 @@ var sendToSanta = function(id, method, obj) {
 }
 
 var sendToUnnei = function(method, obj) {
-  unneiSocket.emit(method, {
-    method: method,
-    options: obj,
-    timestamp: new Date().getTime()
-  });
+  if (unneiSocket !== null) {
+    unneiSocket.emit(method, {
+      method: method,
+      options: obj,
+      timestamp: new Date().getTime()
+    });
+  }
 }
 
 game.join = function(uid, info) {
