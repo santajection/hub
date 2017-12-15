@@ -254,7 +254,7 @@ function main() {
   if (state !== gameState.started) {
     return;
   }
-  projSocket.sendToProj('mobile_move', game.emit());
+  sendToProj('mobile_move', game.emit());
   setTimeout(main, 1000);
 };
 
