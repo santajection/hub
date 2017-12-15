@@ -224,9 +224,10 @@ game.emit = function() {
   Object.keys(activeSanta).forEach(function(k) {
     if (activeSanta[k].cnt !== 0 && activeSanta[k].status === 'playing') {
       res[k] = activeSanta[k].cnt;
-      activeSanta[k] = 0;
+      activeSanta[k].cnt = 0;
     }
   });
+  console.log(res);
   return res;
 };
 
@@ -253,13 +254,7 @@ function main() {
   if (state !== gameState.started) {
     return;
   }
-  if (connection != null) {
-    connection.emit('mobile_move', {
-      method: 'mobile_move',
-      options: game.emit(),
-      timestamp: new Date().getTime()
-    });
-  }
+  projSocket.sendToProj('mobile_move', game.emit());
   setTimeout(main, 1000);
 };
 
