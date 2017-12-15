@@ -44,6 +44,9 @@ game.setUnneiSocket = function(socket) {
   socket.on('notify_mobile', function(msg) {
     sendToSanta(msg.id, 'notify', msg);
   });
+  socket.on('sound', function(msg) {
+    sendToProj('sound', msg);
+  });
   return game;
 };
 
@@ -63,6 +66,9 @@ game.setProjSocket = function(socket) {
   });
   socket.on('hit_tonakai', function(msg) {
     game.hit_tonakai(msg.id);
+  });
+  socket.on('sound', function(msg) {
+    sendToUnnei('sound', msg);
   });
   return game;
 };
