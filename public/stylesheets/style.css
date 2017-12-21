@@ -1,8 +1,38 @@
+html {
+  margin: 0;
+  padding: 0;
+}
+
 body {
-  padding: 50px;
+  margin: 0;
+  padding: 0;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
-a {
-  color: #00B7FF;
+.box {
+  width: 100vw;
+  height: 100vh;
+}
+
+.box__bg_goal {
+  background-image: url(/images/omedetou.png);
+  background-color: #333333;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.box__bg_nogoal {
+  background-image: url(/images/ganbarimashita.png);
+  background-color: #333333;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+@media screen and (max-width: 320px) and (max-width: 480px) {
+  .box {
+    width: 320px;
+    height: 480px;
+  }
 }
