@@ -1,12 +1,7 @@
 !(function(d3, io, Shake) {
-<<<<<<< HEAD
-=======
-  var socket = io.connect('/mobile');
->>>>>>> 48e654e0c831746075b1ca041f77faccd7565ec3
 
   function initGame(_t) {
 
-<<<<<<< HEAD
     var socket = io.connect('/mobile');
 
     socket.on('connect', function() {
@@ -41,26 +36,13 @@
       }
     });
 
-=======
-  function initGame() {
->>>>>>> 48e654e0c831746075b1ca041f77faccd7565ec3
     d3.select('#input_name').on('change', function() {
       var s = d3.select(this).property('value');
       if (s.length > 8) {
         d3.select(this).property('value', s.substring(0, 8));
       }
     });
-<<<<<<< HEAD
     d3.select('#a_join').style('visibility', 'hidden');
-=======
-    d3.select('#a_join').on('click', function() {
-      d3.event.preventDefault();
-      var name = d3.select('#input_name').property('value');
-      socket.emit('join', {name: name});
-      d3.selectAll('.box').style('visibility', 'hidden');
-      d3.select('#div_rule').style('visibility', 'visible');
-    });
->>>>>>> 48e654e0c831746075b1ca041f77faccd7565ec3
     var shake = new Shake({
       threshold: 15,
       timeout: 10
@@ -73,7 +55,6 @@
       d3.select('#div_game').text('ふれてます');
     });
 
-<<<<<<< HEAD
     function readyToJoin() {
       d3.select('#a_join').style('visibility', 'visible').on('click', function() {
         d3.event.preventDefault();
@@ -88,8 +69,6 @@
     };
     d3.select('#div_enter').style('visibility', 'visible');
     this.readyToJoin = readyToJoin;
-=======
->>>>>>> 48e654e0c831746075b1ca041f77faccd7565ec3
   }
   this.initGame = initGame;
 })(d3, io, Shake);
