@@ -7,19 +7,23 @@
 <script src="/javascripts/game.js"></script>
 <body>
   <div class="box__area">
-    <div class="box box__bg_photo">
-      <p>aaa</p>
-      <p>bbb</p>
+    <div id='div_enter' class="box box__bg_photo">
+      <input id='input_name' placeholder="おなまえ"></input>
+      <a href='#' id='button_join'>参加する</a>
     </div>
-    <div class="box box__bg_description">
+    <div id='div_rule' class="box box__bg_description">
     </div>
-    <div class="box box__bg_ready">
+    <div id='div_ready' class="box box__bg_ready">
     </div>
-    <div class="box box__bg_game">
+    <div id='div_game' class="box box__bg_game">
+      <p>ふってください</p>
     </div>
-    <div class="box box__bg_nogoal">
+    <div id='div_nogoal' class="box box__bg_nogoal">
     </div>
-    <div class="box box__bg_goal">
+    <div id='div_goal' class="box box__bg_goal">
     </div>
   </div>
+<script>
+initGame();
+</script>
 </body>
