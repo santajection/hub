@@ -175,10 +175,13 @@ game.join = function(uid, info) {
     if (activeSanta[uid] !== void 0) {
       return false;
     }
+    var color = ['red', 'blu', 'yel', 'gre'][Object.keys(activeSanta).length % 4];
     var obj = {
-      id: uid, cnt: 0, name: info.name, color: info.color,
+      id: uid, cnt: 0, name: info.name, color: color,
       status: 'playing'
     };
+    console.log('================JOINING=============');
+    console.log(obj);
     activeSanta[uid] = obj;
     sendToProj('join', obj)
     return true;
