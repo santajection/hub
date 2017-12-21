@@ -13,7 +13,7 @@ var game = require('./game');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
+app.set('view engine', 'ejs');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -31,7 +31,6 @@ app.use(function(req, res, next) {
   err.status = 404;
   next(err);
 });
-
 
 // error handler
 app.use(function(err, req, res, next) {
@@ -61,26 +60,8 @@ app.initSocketIO = function(io) {
     game.setProjSocket(socket);
   });
 
-  var unnei = io
-    .of('/unnei')
-    .on('connection', function(socket) {
+  var unnei = io.of('/unnei').on('connection', function(socket) {
       game.setUnneiSocket(socket);
-      socket.on('')
-      socket.on('msg send', function (msg) {
-        unnei.emit('msg push', msg);
-      });
-      socket.on('game initialize', function (msg) {
-        game.initialize();
-        unnei.emit('msg push', msg + ' from news');
-      });
-      socket.on('game start', function (msg) {
-        game.start();
-        unnei.emit('msg push', msg + ' from news');
-      });
-      socket.on('game stop', function (msg) {
-        game.end();
-        unnei.emit('msg push', msg + ' from news');
-      });
     });
 };
 game.initialize();

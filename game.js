@@ -17,13 +17,20 @@ var unneiSocket = null;
 var projSocket = null;
 var mobileSockets = {};
 
+var isSocketReady = function() {
+  if (unneiSocket === null || projSocket === null) {
+    return false;
+  }
+  return true;
+};
+
 game.setUnneiSocket = function(socket) {
   unneiSocket = socket;
   socket.on('initialize', function(msg) {
-    sendToProj('initialize', {});
+    sendToProj('initialize', msg);
   });
   socket.on('start', function(msg) {
-    sendToProj('start', {});
+    sendToProj('start', msg);
   });
   socket.on('santa_move', function(msg) {
     sendToProj('santa_move', msg);
@@ -36,6 +43,9 @@ game.setUnneiSocket = function(socket) {
   });
   socket.on('notify_mobile', function(msg) {
     sendToSanta(msg.id, 'notify', msg);
+  });
+  socket.on('sound', function(msg) {
+    sendToProj('sound', msg);
   });
   return game;
 };
@@ -56,6 +66,9 @@ game.setProjSocket = function(socket) {
   });
   socket.on('hit_tonakai', function(msg) {
     game.hit_tonakai(msg.id);
+  });
+  socket.on('sound', function(msg) {
+    sendToUnnei('sound', msg);
   });
   return game;
 };
@@ -85,31 +98,73 @@ game.setMobileSocket = function(id, socket) {
 };
 
 var sendToProj = function(method, obj) {
-  projSocket.emit(method, {
-    method: method,
-    options: obj,
-    timestamp: new Date().getTime()
-  });
+  if (projSocket !== null) {
+    projSocket.emit(method, {
+      method: method,
+      options: obj,
+      timestamp: new Date().getTime()
+    });
+  }
 };
 
-var sendToSanta = function(id, method, obj) {
+var sendToSanta = function(method, obj) {
+  if (obj.id !== void 0) {
+    sendToSantaById(id, method, obj);
+  } else if (obj.status !== void 0) {
+    sendToSantaByStatus(obj.status, method, obj);
+  } else if (obj.broadcast !== void 0 && obj.broadcast) {
+    sendToSantaBroadcast(method, obj);
+  } else {
+    sendToSantaAll(method, obj);
+  }
+};
+
+var sendToSantaById = function(id, method, obj) {
   if (mobileSockets[id] !== void 0) {
-    mobileSockets[id].emit(
-      method, {
+    if (obj.method !== void 0 && obj.options !== void 0 && obj.timestamp !== void 0) {
+      mobileSockets[id].emit(method, obj);
+    } else {
+      mobileSockets[id].emit(method, {
         method: method,
         options: obj,
         timestamp: new Date().getTime()
-      }
-    );
+      });
+    }
   }
+};
+
+var sendToSantaByStatus = function(status, method, obj) {
+  Object.keys(activeSanta).forEach(function(id) {
+    if (activeSanta[id].status === status) {
+      sendToSantaById(id, method, obj);
+    }
+  });
+};
+
+var sendToSantaAll = function(method, obj) {
+  Object.keys(activeSanta).forEach(function(id) {
+    sendToSantaById(id, method, obj);
+  });
+};
+
+var sendToSantaBroadcast = function(method, obj) {
+  Object.keys(mobileSockets).forEach(function(id) {
+    sendToSantaById(id, method, obj);
+  });
 }
 
 var sendToUnnei = function(method, obj) {
-  unneiSocket.emit(method, {
-    method: method,
-    options: obj,
-    timestamp: new Date().getTime()
-  });
+  if (unneiSocket !== null) {
+    if (obj.method !== void 0 && obj.options !== void 0 && obj.timestamp !== void 0) {
+      unneiSocket.emit(method, obj);
+    } else {
+      unneiSocket.emit(method, {
+        method: method,
+        options: obj,
+        timestamp: new Date().getTime()
+      });
+    }
+  }
 }
 
 game.join = function(uid, info) {
@@ -169,9 +224,10 @@ game.emit = function() {
   Object.keys(activeSanta).forEach(function(k) {
     if (activeSanta[k].cnt !== 0 && activeSanta[k].status === 'playing') {
       res[k] = activeSanta[k].cnt;
-      activeSanta[k] = 0;
+      activeSanta[k].cnt = 0;
     }
   });
+  console.log(res);
   return res;
 };
 
@@ -198,13 +254,7 @@ function main() {
   if (state !== gameState.started) {
     return;
   }
-  if (connection != null) {
-    connection.emit('mobile_move', {
-      method: 'mobile_move',
-      options: game.emit(),
-      timestamp: new Date().getTime()
-    });
-  }
+  sendToProj('mobile_move', game.emit());
   setTimeout(main, 1000);
 };
 
