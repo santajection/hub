@@ -53,7 +53,7 @@ app.initSocketIO = function(io) {
   });
 
   var mobile = io.of('/mobile').on('connection', function(socket) {
-    game.setMobileSocket(socket.id, socket);
+    game.setMobileSocket(socket);
   });
 
   var proj = io.of('/proj').on('connection', function(socket) {

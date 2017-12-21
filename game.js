@@ -8,6 +8,7 @@ var gameState = {
 };
 
 var activeSanta = {};
+var activeGameID = null;
 
 var state = gameState.stopped;
 
@@ -16,6 +17,7 @@ var connection = null;
 var unneiSocket = null;
 var projSocket = null;
 var mobileSockets = {};
+var gameIdIdsMap = {};
 
 var isSocketReady = function() {
   if (unneiSocket === null || projSocket === null) {
@@ -27,6 +29,11 @@ var isSocketReady = function() {
 game.setUnneiSocket = function(socket) {
   unneiSocket = socket;
   socket.on('initialize', function(msg) {
+    if (msg !== null && msg.active_game_id !== void 0) {
+      activeGameID = msg.active_game_id;
+    } else {
+      activeGameID = 0;
+    }
     sendToProj('initialize', msg);
   });
   socket.on('start', function(msg) {
@@ -73,27 +80,57 @@ game.setProjSocket = function(socket) {
   return game;
 };
 
-game.setMobileSocket = function(id, socket) {
-  mobileSockets[id] = socket;
-
-  socket.on('move', function (msg) {
-    game.move(socket.id, 1);
-  });
-  socket.on('join', function (msg) {
-    if (game.join(socket.id, msg)) {
-      socket.emit('notify', {
-        message: '参加が受け付けられました'
-      });
+game.setMobileSocket = function(socket) {
+  socket.on('setid', function(_) {
+    var id = _.id;
+    if (mobileSockets[id] === void 0) {
+      if (gameIdIdsMap[_.gid] === void 0) {
+        gameIdIdsMap[_.gid] = [];
+      }
+      gameIdIdsMap[_.gid].push(socket);
+      mobileSockets[id] = socket;
+    }
+    socket.on('move', function (msg) {
+      game.move(id, 1);
+    });
+    socket.on('join', function (msg) {
+      if (game.join(id, msg)) {
+        socket.emit('notify', {
+          message: '参加が受け付けられました'
+        });
+      } else {
+        socket.emit('notify', {
+          message: '参加が受け付けられませんでした'
+        });
+      }
+    });
+    socket.on('glow', function (msg) {
+      game.glow(id);
+    });
+    if (state === gameState.stopped) {
+      if (activeSanta[id] !== void 0) {
+        socket.emit('setstate', {state: 'ended'});
+      } else {
+        socket.emit('setstate', {state: 'wait'});
+      }
+    } else if (state === gameState.initialized) {
+      if (_.gid === activeGameID) {
+        if (activeSanta[id] !== void 0) {
+          socket.emit('setstate', {state: 'rule'});
+        } else {
+          socket.emit('setstate', {state: 'readyToJoin'});
+        }
+      } else {
+        socket.emit('setstate', {state: 'wait'});
+      }
     } else {
-      socket.emit('notify', {
-        message: '参加が受け付けられませんでした'
-      });
+      if (activeSanta[id] !== void 0) {
+        socket.emit('setstate', {state: activeSanta[id].state});
+      } else {
+        socket.emit('setstate', {state: 'wait'});
+      }
     }
   });
-  socket.on('glow', function (msg) {
-    game.glow(socket.id);
-  });
-
   return game;
 };
 
@@ -151,6 +188,14 @@ var sendToSantaBroadcast = function(method, obj) {
   Object.keys(mobileSockets).forEach(function(id) {
     sendToSantaById(id, method, obj);
   });
+}
+
+var sendToSantaByGameId = function(gid, method, obj) {
+  if (gameIdIdsMap[gid] !== void 0) {
+    gameIdIdsMap[gid].forEach(function(id) {
+      sendToSantaById(id, method, obj);
+    });
+  }
 }
 
 var sendToUnnei = function(method, obj) {
@@ -216,10 +261,12 @@ game.initialize = function() {
   console.log('initialized');
   activeSanta = {};
   state = gameState.initialized;
+  idle();
 };
 
 game.end = function() {
   state = gameState.stopped;
+  sendToSantaByGameId(activeGameID, 'setstate', {state: 'ended'});
 };
 
 game.emit = function() {
@@ -239,7 +286,7 @@ game.goaled = function(uid) {
     return;
   }
   activeSanta[uid].state = 'goaled';
-  sendToSanta(uid, 'notify', {message: 'goaled'});
+  sendToSanta(uid, 'setstate', {state: 'goaled'});
 };
 
 game.hit_tonakai = function(uid) {
@@ -253,12 +300,20 @@ game.connect = function(io) {
   connection = io;
 };
 
+function idle() {
+  if (state !== gameState.initialized) {
+    return;
+  }
+  sendToSantaByGameId(activeGameID, 'setstate', {state: 'readyToJoin'});
+  setTimeout(idle, 1000);
+}
+
 function main() {
   if (state !== gameState.started) {
     return;
   }
   sendToProj('mobile_move', game.emit());
   setTimeout(main, 1000);
-};
+}
 
 module.exports = game;
