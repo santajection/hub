@@ -239,7 +239,7 @@ game.goaled = function(uid) {
     return;
   }
   activeSanta[uid].state = 'goaled';
-  sendToSanta(uid, 'notify', {message: 'ゴールしました！おめでとうございます！！'});
+  sendToSanta(uid, 'notify', {message: 'goaled'});
 };
 
 game.hit_tonakai = function(uid) {

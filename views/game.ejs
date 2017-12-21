@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
 <link rel="stylesheet" href="/stylesheets/style.css">
 <script src="/javascripts/vendor/d3.min.js"></script>
 <script src="/javascripts/vendor/shake.js"></script>
@@ -7,9 +8,10 @@
 <script src="/javascripts/game.js"></script>
 <body>
   <div class="box__area">
-    <div id='div_enter' class="box box__bg_photo">
-      <input id='input_name' placeholder="おなまえ"></input>
-      <a href='#' id='button_join'>参加する</a>
+    <div id='div_enter' class="box box__bg_enter">
+      <input id='input_name' placeholder="おなまえ" size=16></input>
+      <a href="#" id='a_join' class="btn btn-primary btn-lg active" role="button" aria-pressed="true">さんかする</a>
+      <p style="font-size: 32px;">じかんになるまでまってね</p>
     </div>
     <div id='div_rule' class="box box__bg_description">
     </div>

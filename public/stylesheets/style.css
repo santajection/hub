@@ -29,6 +29,11 @@ body {
   flex-direction: column;
 }
 
+input {
+  margin-bottom: 50px;
+  font-size: 32px;
+}
+
 .box__bg_description {
   background-image: url(/images/rule.png);
   background-color: #333333;
