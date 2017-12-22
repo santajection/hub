@@ -64,6 +64,5 @@ app.initSocketIO = function(io) {
       game.setUnneiSocket(socket);
     });
 };
-game.initialize();
 
 module.exports = app;

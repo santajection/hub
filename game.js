@@ -12,19 +12,19 @@ var activeGameID = null;
 
 var state = gameState.stopped;
 
-var connection = null;
-
 var unneiSocket = null;
 var projSocket = null;
 var mobileSockets = {};
 var gameIdIdsMap = {};
 
-var isSocketReady = function() {
+
+function isSocketReady() {
   if (unneiSocket === null || projSocket === null) {
     return false;
   }
   return true;
-};
+}
+
 
 game.setUnneiSocket = function(socket) {
   unneiSocket = socket;
@@ -59,13 +59,13 @@ game.setUnneiSocket = function(socket) {
 
 game.setProjSocket = function(socket) {
   projSocket = socket;
-  socket.on('initialized', function(msg) {
+  socket.on('initialized', function() {
     game.initialize();
   });
-  socket.on('started', function(msg) {
+  socket.on('started', function() {
     game.start();
   });
-  socket.on('finished', function(msg) {
+  socket.on('finished', function() {
     game.end();
   });
   socket.on('goaled', function(msg) {
@@ -87,47 +87,43 @@ game.setMobileSocket = function(socket) {
       if (gameIdIdsMap[_.gid] === void 0) {
         gameIdIdsMap[_.gid] = [];
       }
-      gameIdIdsMap[_.gid].push(socket);
+      gameIdIdsMap[_.gid].push(id);
       mobileSockets[id] = socket;
     }
-    socket.on('move', function (msg) {
+    socket.on('move', function () {
       game.move(id, 1);
     });
     socket.on('join', function (msg) {
       if (game.join(id, msg)) {
-        socket.emit('notify', {
-          message: '参加が受け付けられました'
-        });
+        sendToSantaById(id, 'setstatus', {state: 'rule'});
       } else {
-        socket.emit('notify', {
-          message: '参加が受け付けられませんでした'
-        });
+        sendToSantaById(id, 'notify', {message: '参加が受付できませんでした'});
       }
     });
-    socket.on('glow', function (msg) {
+    socket.on('glow', function () {
       game.glow(id);
     });
     if (state === gameState.stopped) {
       if (activeSanta[id] !== void 0) {
-        socket.emit('setstate', {state: 'ended'});
+        sendToSantaById(id, 'setstate', {state: 'ended'});
       } else {
-        socket.emit('setstate', {state: 'wait'});
+        sendToSantaById(id, 'setstate', {state: 'wait'});
       }
     } else if (state === gameState.initialized) {
       if (_.gid === activeGameID) {
         if (activeSanta[id] !== void 0) {
-          socket.emit('setstate', {state: 'rule'});
+          sendToSantaById(id, 'setstate', {state: 'rule'});
         } else {
-          socket.emit('setstate', {state: 'readyToJoin'});
+          sendToSantaById(id, 'setstate', {state: 'readyToJoin'});
         }
       } else {
-        socket.emit('setstate', {state: 'wait'});
+        sendToSantaById(id, 'setstate', {state: 'wait'});
       }
     } else {
       if (activeSanta[id] !== void 0) {
-        socket.emit('setstate', {state: activeSanta[id].state});
+        sendToSantaById(id, 'setstate', {state: activeSanta[id].state});
       } else {
-        socket.emit('setstate', {state: 'wait'});
+        sendToSantaById(id, 'setstate', {state: 'wait'});
       }
     }
   });
@@ -146,7 +142,7 @@ var sendToProj = function(method, obj) {
 
 var sendToSanta = function(method, obj) {
   if (obj.id !== void 0) {
-    sendToSantaById(id, method, obj);
+    sendToSantaById(obj.id, method, obj);
   } else if (obj.status !== void 0) {
     sendToSantaByStatus(obj.status, method, obj);
   } else if (obj.broadcast !== void 0 && obj.broadcast) {
@@ -191,6 +187,8 @@ var sendToSantaBroadcast = function(method, obj) {
 }
 
 var sendToSantaByGameId = function(gid, method, obj) {
+  console.log(gid);
+  console.log(gameIdIdsMap);
   if (gameIdIdsMap[gid] !== void 0) {
     gameIdIdsMap[gid].forEach(function(id) {
       sendToSantaById(id, method, obj);
