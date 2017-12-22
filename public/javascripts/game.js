@@ -82,6 +82,7 @@
     };
     d3.selectAll('.box').style('visibility', 'hidden');
     d3.select('#div_enter').style('visibility', 'visible');
+    readyToJoin();
     this.readyToJoin = readyToJoin;
   }
   this.initGame = initGame;
