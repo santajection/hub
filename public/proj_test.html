@@ -34,7 +34,7 @@ socket.on('connect', function() {
   log(d3.entries(msg).map(function(d) {return d.key + ': ' + d.value;}).join(', '));
   console.log(this);
 }).on('start', function(msg) {
-  socket.emit('start', null);
+  socket.emit('started', null);
   log(d3.entries(msg).map(function(d) {return d.key + ': ' + d.value;}).join(', '));
   console.log(this);
 });
