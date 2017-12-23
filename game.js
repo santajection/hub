@@ -219,7 +219,7 @@ game.join = function(uid, info) {
     return false;
   }
   try {
-    if (info.gid !== activeGameID) {
+    if (info.gid != activeGameID) {
       return false;
     }
     if (activeSanta[uid] !== void 0) {
