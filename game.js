@@ -111,7 +111,11 @@ game.setMobileSocket = function(socket) {
     });
     if (state === gameState.stopped) {
       if (activeSanta[id] !== void 0) {
-        sendToSantaById(id, 'setstate', {state: 'ended'});
+        if (activeSanta[id].state === 'goaled') {
+          sendToSantaById(id, 'setstate', {state: 'goaled'});
+        } else {
+          sendToSantaById(id, 'setstate', {state: 'ended'});
+        }
       } else {
         sendToSantaById(id, 'setstate', {state: 'wait'});
       }
