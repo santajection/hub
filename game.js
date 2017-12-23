@@ -93,9 +93,18 @@ game.setMobileSocket = function(socket) {
     if (gameIdIdsMap[_.gid] === void 0) {
       gameIdIdsMap[_.gid] = [];
     }
-    if (!gameIdIdsMap[_.gid].some(function(d) {return d === id;})) {
-      gameIdIdsMap[_.gid].push(id);
-    }
+    Object.keys(gameIdIdsMap).forEach(function(gid) {
+      if (gid === _.gid) {
+        if (!gameIdIdsMap[gid].some(function(d) {return d === id;})) {
+          gameIdIdsMap[gid].push(id);
+        }
+      } else {
+        var idx = gameIdIdsMap[gid].indexOf(id);
+        if (idx !== -1) {
+          gameIdIdsMap[gid].splice(idx, 1);
+        }
+      }
+    });
     socket.on('move', function () {
       game.move(id, 1);
     });
