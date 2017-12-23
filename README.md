@@ -3,7 +3,48 @@ santa jection Hub Web socket API
 
 # hub
 
-## `/mobile` routes
+### リポジトリのクローン
+
+```sh
+git clone git@github.com:santajection/hub.git
+```
+
+## 実行
+
+Node.js でサーバネイティブにインストールするやり方と、`docker-compose` を使う方法がある。
+
+### Node.js 編
+
+#### パッケージインストール
+
+```sh
+cd hub
+npm install
+```
+
+#### 起動
+
+```sh
+npm start
+```
+
+または
+
+```sh
+./bin/www
+```
+
+### `docker-compose` 編
+
+#### 起動
+
+```sh
+docker-compose up
+```
+
+## ソケット一覧
+
+### `/mobile` routes
 
 - `socket.emit('move', 1)`: 振った
 - `socket.emit('join', {name: 'someone', color: 'red'})`: 参加表明 (colorは `'red', 'blu', 'yel', 'gre'`)。受け付けられたら `notify` ルートで `{message: '参加が受け付けられました'}` を受信、受け付けられなかったら　`notify` ルートで `{message: '参加が受け付けられませんでした'}` を受信。
@@ -12,7 +53,7 @@ santa jection Hub Web socket API
 - `socket.on('notify', [Object])`: 運営からのメッセージ受信
 - `socket.on('setstate', {method: 'setstate', options: {state: 'xxx'}})`: アプリの状態を設定
 
-## `/proj` routes
+### `/proj` routes
 
 - `socket.on('mobile_move', {method: 'mobile_move', options: ..., timestamp: 12345678999987321})`: サンタが動いた
 - `socket.on('join', {method: 'join', options: {id: 'socketid', name: 'someone', color: 'red'}, timestamp: 1234321444)`: 新サンタ加入
@@ -30,7 +71,7 @@ santa jection Hub Web socket API
 - `socket.emit('hit_tonakai', {id: 'socketid'})`: `socketid` のサンタがトナカイに衝突した
 - `socket.emit('sound', {name: 'audio_name', method: 'play'})`: サウンドを鳴らす（止める）
 
-## `/unnei` routes
+### `/unnei` routes
 - `socket.on('sound', {options: {name: 'audio_name', 'method': 'play'}, method: 'sound', timestamp: 1231231231})`: サウンドを鳴らす
 ---
 - `socket.emit('initialize', {active_game_id: id})`: 参加受付状態にしろ
