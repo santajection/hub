@@ -279,7 +279,6 @@ game.end = function() {
       }
     });
   }
-  sendToSantaByGameId(activeGameID, 'setstate', {state: 'ended'});
 };
 
 game.emit = function() {
