@@ -262,7 +262,7 @@ game.move = function(uid, amount) {
 game.start = function() {
   console.log('started');
   state = gameState.started;
-  sendToSantaByGameId(activeGameID, 'setstate', {state: 'ready'});
+  sendToSantaAll('setstate', {state: 'ready'});
   console.log(activeSanta);
   main();
 };

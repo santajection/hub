@@ -32,7 +32,7 @@
     this.setScreenRule = setScreenRule;
     function setScreenReady() {
       setScreen('#div_ready');
-      setTimeout(setScreenGame, 2000);
+      setTimeout(setScreenGame, 3500);
     }
     this.setScreenReady = setScreenReady;
     function setScreenGame() {
