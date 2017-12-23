@@ -33,9 +33,9 @@ game.setUnneiSocket = function(socket) {
   unneiSocket = socket;
   socket.on('initialize', function(msg) {
     if (msg !== null && msg.active_game_id !== void 0) {
-      activeGameID = msg.active_game_id;
+      activeGameID = '' + msg.active_game_id;
     } else {
-      activeGameID = 0;
+      activeGameID = '0';
     }
     sendToProj('initialize', msg);
   });
@@ -90,11 +90,10 @@ game.setMobileSocket = function(socket) {
   socket.on('setid', function(_) {
     var id = _.id;
     mobileSockets[id] = socket;
-    if (gameIdIdsMap[_.gid] === void 0) {
-      gameIdIdsMap[_.gid] = [];
+    if (gameIdIdsMap['' + _.gid] === void 0) {
+      gameIdIdsMap['' + _.gid] = [];
     }
     Object.keys(gameIdIdsMap).forEach(function(gid) {
-      console.log(gid);
       if (gid == _.gid) {
         var idx = gameIdIdsMap[gid].indexOf(id);
         if (idx === -1) {
@@ -349,7 +348,7 @@ function main() {
     return;
   }
   sendToProj('mobile_move', game.emit());
-  setTimeout(main, 500);
+  setTimeout(main, 1000);
 }
 
 module.exports = game;
