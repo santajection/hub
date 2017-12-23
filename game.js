@@ -132,7 +132,7 @@ game.setMobileSocket = function(socket) {
         sendToSantaById(id, 'setstate', {state: 'wait'});
       }
     } else if (state === gameState.initialized) {
-      if (_.gid === activeGameID) {
+      if (_.gid == activeGameID) {
         if (activeSanta[id] !== void 0) {
           sendToSantaById(id, 'setstate', {state: 'rule'});
         } else {
@@ -349,7 +349,7 @@ function main() {
     return;
   }
   sendToProj('mobile_move', game.emit());
-  setTimeout(main, 1000);
+  setTimeout(main, 500);
 }
 
 module.exports = game;
