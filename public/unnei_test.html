@@ -7,7 +7,7 @@
 <script type="text/javascript" src="https://cdn.rawgit.com/alexgibson/shake.js/master/shake.js"></script>
 <body>
 <ul>
-  <li><a id='init' href='#'>initialize</a></li>
+  <li><input id='gameid'></input><a id='init' href='#'>initialize</a></li>
   <li><a id='start' href='#'>start</a></li>
   <li><a id='stop' href='#'>finish</a></li>
   <li><input id='bamen'></input><a id='bamensubmit' href='#'>submit</a></li>
@@ -25,7 +25,7 @@ socket.on('connect', function() {
 d3.select('#init').on('click', function() {
   d3.event.preventDefault();
   d3.event.stopPropagation();
-  socket.emit('initialize', null);
+  socket.emit('initialize', {active_game_id: d3.select('#gameid').property('value')});
 });
 
 d3.select('#start').on('click', function() {

@@ -1,57 +1,87 @@
-# D3: Data-Driven Documents
+santa jection Hub Web socket API
+===
 
-<a href="https://d3js.org"><img src="https://d3js.org/logo.svg" align="left" hspace="10" vspace="6"></a>
+# hub
 
-**D3** (or **D3.js**) is a JavaScript library for visualizing data using web standards. D3 helps you bring data to life using SVG, Canvas and HTML. D3 combines powerful visualization and interaction techniques with a data-driven approach to DOM manipulation, giving you the full capabilities of modern browsers and the freedom to design the right visual interface for your data.
+### リポジトリのクローン
 
-## Resources
-
-* [API Reference](https://github.com/d3/d3/blob/master/API.md)
-* [Release Notes](https://github.com/d3/d3/releases)
-* [Gallery](https://github.com/d3/d3/wiki/Gallery)
-* [Examples](https://bl.ocks.org/mbostock)
-* [Wiki](https://github.com/d3/d3/wiki)
-
-## Installing
-
-If you use npm, `npm install d3`. Otherwise, download the [latest release](https://github.com/d3/d3/releases/latest). The released bundle supports anonymous AMD, CommonJS, and vanilla environments. You can load directly from [d3js.org](https://d3js.org), [CDNJS](https://cdnjs.com/libraries/d3), or [unpkg](https://unpkg.com/d3/). For example:
-
-```html
-<script src="https://d3js.org/d3.v4.js"></script>
+```sh
+git clone git@github.com:santajection/hub.git
 ```
 
-For the minified version:
+## 実行
 
-```html
-<script src="https://d3js.org/d3.v4.min.js"></script>
+Node.js でサーバネイティブにインストールするやり方と、`docker-compose` を使う方法がある。
+
+### Node.js 編
+
+#### パッケージインストール
+
+```sh
+cd hub
+npm install
 ```
 
-You can also use the standalone D3 microlibraries. For example, [d3-selection](https://github.com/d3/d3-selection):
+#### 起動
 
-```html
-<script src="https://d3js.org/d3-selection.v1.js"></script>
+```sh
+npm start
 ```
 
-D3 is written using [ES2015 modules](http://www.2ality.com/2014/09/es6-modules-final.html). Create a [custom bundle using Rollup](https://bl.ocks.org/mbostock/bb09af4c39c79cffcde4), Webpack, or your preferred bundler. To import D3 into an ES2015 application, either import specific symbols from specific D3 modules:
+または
 
-```js
-import {scaleLinear} from "d3-scale";
+```sh
+./bin/www
 ```
 
-Or import everything into a namespace (here, `d3`):
+### `docker-compose` 編
 
-```js
-import * as d3 from "d3";
+#### 起動
+
+```sh
+docker-compose up
 ```
 
-In Node:
+## ソケット一覧
 
-```js
-var d3 = require("d3");
-```
+### `/mobile` routes
 
-You can also require individual modules and combine them into a `d3` object using [Object.assign](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign):
+- `socket.emit('move', 1)`: 振った
+- `socket.emit('join', {name: 'someone', color: 'red'})`: 参加表明 (colorは `'red', 'blu', 'yel', 'gre'`)。受け付けられたら `notify` ルートで `{message: '参加が受け付けられました'}` を受信、受け付けられなかったら　`notify` ルートで `{message: '参加が受け付けられませんでした'}` を受信。
+- `socket.emit('glow', null)`: 自分を光らせろと要求する
+----
+- `socket.on('notify', [Object])`: 運営からのメッセージ受信
+- `socket.on('setstate', {method: 'setstate', options: {state: 'xxx'}})`: アプリの状態を設定
 
-```js
-var d3 = Object.assign({}, require("d3-format"), require("d3-geo"), require("d3-geo-projection"));
-```
+### `/proj` routes
+
+- `socket.on('mobile_move', {method: 'mobile_move', options: ..., timestamp: 12345678999987321})`: サンタが動いた
+- `socket.on('join', {method: 'join', options: {id: 'socketid', name: 'someone', color: 'red'}, timestamp: 1234321444)`: 新サンタ加入
+- `socket.on('glow_santa', {method: 'glow_santa', options: {id: 'socketid'}, timestamp: 12314123333})`
+- `socket.on('change_scene', {method: 'change_scene', options: {???}, timestamp: 12323422224123})`: 画面遷移指示
+- `socket.on('initialize', {method: 'initialize', options: {}, timestamp: 12312312323})`: 参加受付状態遷移指示
+- `socket.on('start', {method: 'start', options: {}, timestamp: 12332342412321})`: ゲーム開始指示
+- `socket.on('notify', {method: 'notify', options: {...}, timestamp: 1231231231})`: 運営からのメッセージを受信
+- `socket.on('santa_move', {method: 'santa_move', options: {color: 'red', amount: 123}, timestamp: 1232141312})`: `color` 色のサンタを `amount` だけ進める指示
+----
+- `socket.emit('initialized', null)`: 参加受付状態になった
+- `socket.emit('started', null)`: ゲームがスタートした
+- `socket.emit('ended', null)`: ゲームが終了した
+- `socket.emit('goaled', {id: 'socketid'})`: `socketid` のサンタがゴールした
+- `socket.emit('hit_tonakai', {id: 'socketid'})`: `socketid` のサンタがトナカイに衝突した
+- `socket.emit('sound', {name: 'audio_name', method: 'play'})`: サウンドを鳴らす（止める）
+
+### `/unnei` routes
+- `socket.on('sound', {options: {name: 'audio_name', 'method': 'play'}, method: 'sound', timestamp: 1231231231})`: サウンドを鳴らす
+---
+- `socket.emit('initialize', {active_game_id: id})`: 参加受付状態にしろ
+- `socket.emit('start', null)`: ゲームを開始しろ
+- `socket.emit('santa_move', {color: 'red', amount: 123})`: `color` 色のサンタを `amount` だけ進めろ
+- `socket.emit('change_scene', {???})`: 画面を遷移しろ
+- `socket.emit('notify_proj', {message: 'some message'})`: プロジェクタへメッセージ送信
+- `socket.emit('notify_mobile', {..., message: 'some message'})`: モバイルへメッセージ送信 ...部は送信先の指定に使う。
+    - `{id: 'socketid', message: 'some message'}`: IDのサンタへ `'some message'` 送信
+    - `{status: 'playing', message: 'some message'}`: ゴールしてないサンタ全員へ `'some message'` を送信
+    - `{status: 'goaled', message: 'some message'}`: ゴールしたサンタ全員へ `'some message'` を送信
+    - `{message: 'some message'}`: 参加中の全てのサンタへ `'some message'` を送信
+    - `{broadcast: true, message: 'some message'}`: ソケット接続している全てのサンタに送信

@@ -8,25 +8,35 @@ var gameState = {
 };
 
 var activeSanta = {};
+var activeGameID = null;
 
 var state = gameState.stopped;
-
-var connection = null;
 
 var unneiSocket = null;
 var projSocket = null;
 var mobileSockets = {};
+var gameIdIdsMap = {};
 
-var isSocketReady = function() {
+game.get_active_game_id = function() {
+  return activeGameID;
+};
+
+function isSocketReady() {
   if (unneiSocket === null || projSocket === null) {
     return false;
   }
   return true;
-};
+}
+
 
 game.setUnneiSocket = function(socket) {
   unneiSocket = socket;
   socket.on('initialize', function(msg) {
+    if (msg !== null && msg.active_game_id !== void 0) {
+      activeGameID = '' + msg.active_game_id;
+    } else {
+      activeGameID = '0';
+    }
     sendToProj('initialize', msg);
   });
   socket.on('start', function(msg) {
@@ -52,13 +62,16 @@ game.setUnneiSocket = function(socket) {
 
 game.setProjSocket = function(socket) {
   projSocket = socket;
-  socket.on('initialized', function(msg) {
+  socket.on('initialized', function() {
     game.initialize();
   });
-  socket.on('started', function(msg) {
+  socket.on('started', function() {
     game.start();
   });
-  socket.on('finished', function(msg) {
+  socket.on('ended', function() {
+    game.end();
+  });
+  socket.on('finished', function() {
     game.end();
   });
   socket.on('goaled', function(msg) {
@@ -73,27 +86,68 @@ game.setProjSocket = function(socket) {
   return game;
 };
 
-game.setMobileSocket = function(id, socket) {
-  mobileSockets[id] = socket;
-
-  socket.on('move', function (msg) {
-    game.move(socket.id, 1);
-  });
-  socket.on('join', function (msg) {
-    if (game.join(socket.id, msg)) {
-      socket.emit('notify', {
-        message: '参加が受け付けられました'
-      });
+game.setMobileSocket = function(socket) {
+  socket.on('setid', function(_) {
+    var id = _.id;
+    mobileSockets[id] = socket;
+    if (gameIdIdsMap['' + _.gid] === void 0) {
+      gameIdIdsMap['' + _.gid] = [];
+    }
+    Object.keys(gameIdIdsMap).forEach(function(gid) {
+      if (gid == _.gid) {
+        var idx = gameIdIdsMap[gid].indexOf(id);
+        if (idx === -1) {
+          gameIdIdsMap[gid].push(id);
+        }
+      } else {
+        var idx = gameIdIdsMap[gid].indexOf(id);
+        if (idx !== -1) {
+          gameIdIdsMap[gid].splice(idx, 1);
+        }
+      }
+    });
+    console.log(gameIdIdsMap);
+    socket.on('move', function () {
+      game.move(id, 1);
+    });
+    socket.on('join', function (msg) {
+      if (game.join(id, msg)) {
+        sendToSantaById(id, 'setstatus', {state: 'rule'});
+      } else {
+        sendToSantaById(id, 'notify', {message: '参加が受付できませんでした'});
+      }
+    });
+    socket.on('glow', function () {
+      game.glow(id);
+    });
+    if (state === gameState.stopped) {
+      if (activeSanta[id] !== void 0) {
+        if (activeSanta[id].state === 'goaled') {
+          sendToSantaById(id, 'setstate', {state: 'goaled'});
+        } else {
+          sendToSantaById(id, 'setstate', {state: 'ended'});
+        }
+      } else {
+        sendToSantaById(id, 'setstate', {state: 'wait'});
+      }
+    } else if (state === gameState.initialized) {
+      if (_.gid == activeGameID) {
+        if (activeSanta[id] !== void 0) {
+          sendToSantaById(id, 'setstate', {state: 'rule'});
+        } else {
+          sendToSantaById(id, 'setstate', {state: 'readyToJoin'});
+        }
+      } else {
+        sendToSantaById(id, 'setstate', {state: 'wait'});
+      }
     } else {
-      socket.emit('notify', {
-        message: '参加が受け付けられませんでした'
-      });
+      if (activeSanta[id] !== void 0) {
+        sendToSantaById(id, 'setstate', {state: activeSanta[id].state});
+      } else {
+        sendToSantaById(id, 'setstate', {state: 'wait'});
+      }
     }
   });
-  socket.on('glow', function (msg) {
-    game.glow(socket.id);
-  });
-
   return game;
 };
 
@@ -109,7 +163,7 @@ var sendToProj = function(method, obj) {
 
 var sendToSanta = function(method, obj) {
   if (obj.id !== void 0) {
-    sendToSantaById(id, method, obj);
+    sendToSantaById(obj.id, method, obj);
   } else if (obj.status !== void 0) {
     sendToSantaByStatus(obj.status, method, obj);
   } else if (obj.broadcast !== void 0 && obj.broadcast) {
@@ -153,6 +207,14 @@ var sendToSantaBroadcast = function(method, obj) {
   });
 }
 
+var sendToSantaByGameId = function(gid, method, obj) {
+  if (gameIdIdsMap[gid] !== void 0) {
+    gameIdIdsMap[gid].forEach(function(id) {
+      sendToSantaById(id, method, obj);
+    });
+  }
+}
+
 var sendToUnnei = function(method, obj) {
   if (unneiSocket !== null) {
     if (obj.method !== void 0 && obj.options !== void 0 && obj.timestamp !== void 0) {
@@ -172,13 +234,19 @@ game.join = function(uid, info) {
     return false;
   }
   try {
-    if (activeSanta[uid] !== void 0) {
+    if (info.gid != activeGameID) {
       return false;
     }
+    if (activeSanta[uid] !== void 0) {
+      return true;
+    }
+    var color = ['red', 'blu', 'yel', 'gre'][Object.keys(activeSanta).length % 4];
     var obj = {
-      id: uid, cnt: 0, name: info.name, color: info.color,
+      id: uid, cnt: 0, name: info.name, color: color,
       status: 'playing'
     };
+    console.log('================JOINING=============');
+    console.log(obj);
     activeSanta[uid] = obj;
     sendToProj('join', obj)
     return true;
@@ -205,6 +273,7 @@ game.move = function(uid, amount) {
 game.start = function() {
   console.log('started');
   state = gameState.started;
+  sendToSantaAll('setstate', {state: 'ready'});
   console.log(activeSanta);
   main();
 };
@@ -213,10 +282,18 @@ game.initialize = function() {
   console.log('initialized');
   activeSanta = {};
   state = gameState.initialized;
+  idle();
 };
 
 game.end = function() {
   state = gameState.stopped;
+  if (gameIdIdsMap[activeGameID] !== void 0) {
+    gameIdIdsMap[activeGameID].forEach(function(id) {
+      if (activeSanta[id] !== void 0 && activeSanta[id].state !== 'goaled') {
+        sendToSantaById(id, 'setstate', {state: 'ended'});
+      }
+    });
+  }
 };
 
 game.emit = function() {
@@ -236,7 +313,7 @@ game.goaled = function(uid) {
     return;
   }
   activeSanta[uid].state = 'goaled';
-  sendToSanta(uid, 'notify', {message: 'ゴールしました！おめでとうございます！！'});
+  sendToSantaById(uid, 'setstate', {state: 'goaled'});
 };
 
 game.hit_tonakai = function(uid) {
@@ -250,12 +327,28 @@ game.connect = function(io) {
   connection = io;
 };
 
+function idle() {
+  if (state !== gameState.initialized) {
+    return;
+  }
+  if (gameIdIdsMap[activeGameID] !== void 0) {
+    gameIdIdsMap[activeGameID].forEach(function(id) {
+      if (activeSanta[id] === void 0) {
+        sendToSantaById(id, 'setstate', {state: 'readyToJoin'});
+      } else {
+        sendToSantaById(id, 'setstate', {state: 'rule'});
+      }
+    });
+  }
+  setTimeout(idle, 1000);
+}
+
 function main() {
   if (state !== gameState.started) {
     return;
   }
   sendToProj('mobile_move', game.emit());
   setTimeout(main, 1000);
-};
+}
 
 module.exports = game;
