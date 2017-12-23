@@ -94,8 +94,10 @@ game.setMobileSocket = function(socket) {
       gameIdIdsMap[_.gid] = [];
     }
     Object.keys(gameIdIdsMap).forEach(function(gid) {
-      if (gid === _.gid) {
-        if (!gameIdIdsMap[gid].some(function(d) {return d === id;})) {
+      console.log(gid);
+      if (gid == _.gid) {
+        var idx = gameIdIdsMap[gid].indexOf(id);
+        if (idx === -1) {
           gameIdIdsMap[gid].push(id);
         }
       } else {
@@ -105,6 +107,7 @@ game.setMobileSocket = function(socket) {
         }
       }
     });
+    console.log(gameIdIdsMap);
     socket.on('move', function () {
       game.move(id, 1);
     });
