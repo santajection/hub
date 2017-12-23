@@ -51,7 +51,13 @@ input {
   background-repeat: no-repeat;
   background-position: center;
 }
-
+.box__bg_game {
+  background-image: url(/images/don.png);
+  background-color: #333333;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
 .box__bg_ready {
   background-image: url(/images/yoi.png);
   background-color: #333333;
